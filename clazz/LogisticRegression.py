@@ -25,14 +25,21 @@ class LogisticRegression:
             for i in random_ids:
                 x_i = X[i, :]
                 y_i = y[i]
-                z_i = self.__sigmoid(x_i @ self.w)      
-                self.w -= self.lr * ((z_i - y_i) * x_i + self.lamda * self.w)
+                z_i = self.__sigmoid(x_i @ self.w) 
+                # Gradient update: scale L2 regularization by n_samples for SGD
+                grad = (z_i - y_i) * x_i + (self.lamda / n_samples) * self.w  
+                # Clip gradient to prevent extreme weight updates   
+                grad = np.clip(grad, -5.0, 5.0)
+                self.w -= self.lr * grad
 
     def predict(self, X, threshold = 0.5):
         return [1 if i > threshold else 0 for i in self.__sigmoid(X @ self.w)]
         
 
     def __sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))
+        z = np.clip(z, -500, 500)  # Clip range to avoid floating-point overflow
+        return np.where(z >= 0, 
+                        1 / (1 + np.exp(-z)), 
+                        np.exp(z) / (1 + np.exp(z)))
 
     
